@@ -29,6 +29,9 @@ func main() {
 
 	//getting attachment download url
 	url, err := client.DownloadAttachmentUrl("example@vjuum.com", 123, "image.jpg")
+
+	//deleting all messages from mailbox
+	err := client.ClearMailbox("example@vjuum.com")
 }
 
 ```

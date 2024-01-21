@@ -136,6 +136,7 @@ func (c *Client) ReadEmail(address string, id int) (MessageDetailed, error) {
 	if len(parts) != 2 {
 		return message, errors.New("error parsing address; it should be name@domain; use GenerateRandomEmailAddresses func")
 	}
+
 	req, err := http.NewRequest("GET", baseUrl+"?action=readMessage&login="+parts[0]+"&domain="+parts[1]+"&id="+strconv.Itoa(id), nil)
 	if err != nil {
 		return message, errors.New("error creating new http request")
@@ -177,20 +178,17 @@ func (c *Client) ClearMailbox(address string) error {
 	if len(parts) != 2 {
 		return errors.New("error parsing address; it should be name@domain; use GenerateRandomEmailAddresses func")
 	}
-	formData := url.Values{
-		"action": {"deleteMailbox"},
-		"login":  {parts[0]},
-		"domain": {parts[1]},
-	}
-	req, err := http.NewRequest("POST", "https://www.1secmail.com/mailbox", strings.NewReader(formData.Encode()))
-	if err != nil {
-		return errors.New("error creating new http request")
-	}
+	formData := url.Values{}
 
-	res, err := c.httpClient.Do(req)
+	formData.Set("action", "deleteMailbox")
+	formData.Set("login", parts[0])
+	formData.Set("domain", parts[1])
+
+	res, err := http.PostForm("https://www.1secmail.com/mailbox", formData)
 	if err != nil {
 		return errors.New("error doing http request")
 	}
+
 	res.Body.Close()
 	if res.StatusCode != 200 {
 		return errors.New("error response status == " + res.Status)

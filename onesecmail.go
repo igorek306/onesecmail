@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -169,4 +170,31 @@ func (c *Client) DownloadAttachmentUrl(address string, messageID int, filename s
 	url = baseUrl + "?action=download&login=" + parts[0] + "&domain=" + parts[1] + "&id=" + strconv.Itoa(messageID) + "&file=" + filename
 
 	return url, nil
+}
+
+func (c *Client) ClearMailbox(address string) error {
+	parts := strings.Split(address, "@")
+	if len(parts) != 2 {
+		return errors.New("error parsing address; it should be name@domain; use GenerateRandomEmailAddresses func")
+	}
+	formData := url.Values{
+		"action": {"deleteMailbox"},
+		"login":  {parts[0]},
+		"domain": {parts[1]},
+	}
+	req, err := http.NewRequest("POST", "https://www.1secmail.com/mailbox", strings.NewReader(formData.Encode()))
+	if err != nil {
+		return errors.New("error creating new http request")
+	}
+
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return errors.New("error doing http request")
+	}
+	res.Body.Close()
+	if res.StatusCode != 200 {
+		return errors.New("error response status == " + res.Status)
+	}
+
+	return nil
 }
